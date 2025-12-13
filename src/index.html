@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
         <title>Sand</title>
    </head>
    <body>
@@ -26,6 +27,7 @@
             <button id="steamEngineButton">Steam Engine</button>
             <button id="wireButton">Wire</button>
             <button id="seedButton">Seed</button>
+            <button id="fishButton">Fish</button>
          </div>
 
          <div class="debug">
@@ -51,7 +53,7 @@
             <h1 id="sandHeader">Sand: 0</h1>
             <table class="stat-table">
                <tr>
-                  <td>Mouse Sand Drop Rate:</td>
+                  <td>Mouse Drop Rate:</td>
                   <td id="mspsDisplay">0</td>
                </tr>
                <tr>
@@ -71,17 +73,13 @@
                <button id="upgradeSandMultiplierButton">Upgrade Sand Multiplier (300)</button>
             </div>
 
-            <div class="form-container">
-               <table>
-                  <tr>
-                     <td><label for="spsInput">SPS:</label></td>
-                     <td><input type="text" id="spsInput"></td>
-                  </tr>
-                  <tr>
-                     <td><label for="portalSpawnRateInput">Portal Spawn Rate:</label></td>
-                     <td><input type="text" id="portalSpawnRateInput"></td>
-                  </tr>
-               </table>
+            <div>
+               <input type="checkbox" id="debugToggle">
+               <label for="debugToggle">Debug Mode</label>
+            </div>
+
+            <div id="debugFormContainer" class="form-container">
+               
             </div>
          </div>
          <div class="bottom-container">

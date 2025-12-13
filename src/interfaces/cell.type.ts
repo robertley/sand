@@ -1,11 +1,14 @@
 export type Cell =
     'empty' |
     'sand' |
-    'dirt' | 'wet-dirt' | 'dirt-with-seed' | 'wet-dirt-with-seed' |
+    'dirt' | 'wet-dirt' | 'dirt-with-seed' | 'wet-dirt-with-seed' | `wet-dirt-with-seed-${number}` |
     'water' | 'water-left' | 'water-right' |
     'fire-0' | 'fire-1' | 'fire-2' | 'fire-3' | 'fire-4' |
     'seed' |
-    'plant' |
+    // trunk-{heightIndex}-{tickCreated}-{color}
+    'trunk' | `trunk-${number}-${number}-${string}` |
+    // seaweed-{heightIndex}-{tickCreated}
+    'seaweed' | `seaweed-${number}-${number}` |
     'steam' |
     'water-vapor-0' | 'water-vapor-1' | 'water-vapor-2' | 'water-vapor-3' | 'water-vapor-4' |
     'stone' |
@@ -14,7 +17,9 @@ export type Cell =
     'water-portal' | 'torch' |
     'steam-engine-0' | 'steam-engine-1' | 'steam-engine-2' | 'steam-engine-3' | 'steam-engine-4' |
     'wire' |
-    'wire-p-l' | 'wire-p-r' | 'wire-p-u' | 'wire-p-d';
+    'wire-p-l' | 'wire-p-r' | 'wire-p-u' | 'wire-p-d' |
+    // fish-{state}-{nextMove}-{fishTypeId}
+    `fish` | `fish-${string}-${number}-${number}`
     // 'wire-p-l-r' | 'wire-p-l-d' | 'wire-p-l-u' |
     // 'wire-p-r-d' | 'wire-p-r-u' | 'wire-p-r-l' |
     // 'wire-p-u-d' | 'wire-p-u-l' | 'wire-p-u-r' |

@@ -1,4 +1,4 @@
-import { CANVAS, clearCanvas, GAME_STATE, increaseGridSize, newGame, saveGame, spendSand, updateSandCount } from "..";
+import { CANVAS, clearCanvas, GAME_STATE, increaseGridSize, newGame, saveGame, setGridSize, spendSand, updateSandCount } from "..";
 import { Cell, CELL_TYPES } from "../interfaces/cell.type";
 
 const CLEAR_BUTTON = document.getElementById('clearButton');
@@ -21,7 +21,7 @@ const ERASER_BUTTON = document.getElementById('eraserButton');
 const STEAM_ENGINE_BUTTON = document.getElementById('steamEngineButton');
 const WIRE_BUTTON = document.getElementById('wireButton');
 const SEED_BUTTON = document.getElementById('seedButton');
-
+const FISH_BUTTON = document.getElementById('fishButton');
 
 NEW_GAME_BUTTON.onclick = function () {
     newGame();
@@ -44,14 +44,14 @@ HOLD_TO_SAND_BUTTON.onclick = function () {
 
 UPGRADE_SPS_BUTTON.onclick = function () {
     if (GAME_STATE.sandCount >= 100) {
-        GAME_STATE.sandPerSecond += 5;
+        GAME_STATE.mouseDropRate += 5;
         updateSandCount(-100);
     }
 }
 
 UPGRADE_GRID_SIZE_BUTTON.onclick = function () {
     if (GAME_STATE.sandCount >= 200) {
-        increaseGridSize();
+        setGridSize(GAME_STATE.width + 10, GAME_STATE.height + 10);
         updateSandCount(-200);
     }
 }
@@ -126,6 +126,15 @@ WIRE_BUTTON.onclick = function () {
 SEED_BUTTON.onclick = function () {
     GAME_STATE.drawCell = 'seed';
     updateCanvasClass('seed');
+}
+
+FISH_BUTTON.onclick = function () {
+    GAME_STATE.drawCell = 'fish';
+    updateCanvasClass('fish');
+}
+
+function initDebugForm() {
+
 }
 
 

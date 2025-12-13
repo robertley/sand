@@ -6,7 +6,7 @@ export interface GameState {
     width: number;
     height: number;
     sandCount: number;
-    sandPerSecond: number;
+    mouseDropRate: number;
 
     // mouse state
     mouseDown: boolean;
@@ -23,6 +23,9 @@ export interface GameState {
     holdToSandUnlocked: boolean;
     sandPortalRate: number;
     sandMultiplier: number;
+
+    // debug
+    debugMode: boolean;
 
     // meta
     _abortUpdate: boolean;

@@ -1,7 +1,8 @@
 import { ADD_CELL_MAP, CANVAS, GAME_STATE, getCellAtPos, TARGET_FPS, updateSandCount } from "..";
+import { Cell } from "../interfaces/cell.type";
 
 const NON_BLOOM_CELL_TYPES = ['stone', 'hole', 'sand-portal-0', 'water-portal', 'torch', 'empty', 'steam-engine-0', 'wire'];
-const MAX_DROP_RATE_TYPES = ['seed'];
+const MAX_DROP_RATE_TYPES = ['seed', 'fish'];
 const MAX_DROP_RATE = 5;
 
 function getMousePosCell(e: MouseEvent) {
@@ -56,7 +57,7 @@ export function holdSpawnUpdate() {
 
     let now = Date.now();
 
-    let sandPerSecond = GAME_STATE.sandPerSecond;
+    let sandPerSecond = GAME_STATE.mouseDropRate;
     if (MAX_DROP_RATE_TYPES.includes(GAME_STATE.drawCell)) {
         sandPerSecond = MAX_DROP_RATE;
     }
@@ -84,12 +85,6 @@ export function holdSpawnUpdate() {
 }
 
 function addCellAtMouse({x, y}: {x: number, y: number}) {
-
-    // if (GAME_STATE.drawCell === 'hole') {
-    //     console.log('adding hole at', x, y);
-    // }
-
-    
 
     let cellAtPos = getCellAtPos(x, y);
     let cellAtRight = getCellAtPos(x + 1, y);
@@ -167,5 +162,16 @@ function addCellAtMouse({x, y}: {x: number, y: number}) {
         return;
     }
 
-    ADD_CELL_MAP.set(`${x},${y}`, { x, y, type: GAME_STATE.drawCell });
+    let finalCell = checkSpecialCell(GAME_STATE.drawCell);
+    ADD_CELL_MAP.set(`${x},${y}`, { x, y, type: finalCell });
+}
+
+function checkSpecialCell(cell: Cell): Cell {
+    let returnCell: Cell = cell;
+    switch (cell) {
+        case 'fish':
+            let fishTypeId = Math.floor(Math.random() * 3);
+            returnCell = `fish-pending-5-${fishTypeId}`;
+    }
+    return returnCell;
 }

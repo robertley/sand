@@ -42,5 +42,6 @@ module.exports = {
   devServer: {
     static: DIST_PATH,
     hot: true,
+    watchFiles: ['src/**/*'],
   },
 }

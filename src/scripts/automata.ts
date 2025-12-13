@@ -17,24 +17,22 @@ export function sandAutomata(x: number, y: number, cellType: Cell) {
         return;
     }; // at bottom edge
 
-    let leftCell = GAME_STATE.nextGrid[y + 1][x - 1];
-    let rightCell = GAME_STATE.nextGrid[y + 1][x + 1];
+    let { cellBelowLeft, cellBelowRight, cellBelow } = getNeighborCells(x, y);
 
-    const belowCell = GAME_STATE.nextGrid[y + 1][x];
     // const leftBelowCell = x - 1 >= 0 ? GAME_STATE.nextGrid[y + 1][x - 1] : null;
     // const rightBelowCell = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y + 1][x + 1] : null;
 
-    if (FALL_CELLS.includes(belowCell)) {
+    if (FALL_CELLS.includes(cellBelow)) {
         if (holeCheck({ x, y }, { x: x, y: y + 1 })) {
             return;
         }
         GAME_STATE.nextGrid[y + 1][x] = cellType;
-        GAME_STATE.nextGrid[y][x] = belowCell;
+        GAME_STATE.nextGrid[y][x] = cellBelow;
         return;
     }
 
-    const leftEmpty = x - 1 >= 0 && FALL_CELLS.includes(leftCell);
-    const rightEmpty = x + 1 < GAME_STATE.width && FALL_CELLS.includes(rightCell);
+    const leftEmpty = FALL_CELLS.includes(cellBelowLeft);
+    const rightEmpty = FALL_CELLS.includes(cellBelowRight);
 
     let moveX;
     let moveY = y + 1;
@@ -44,10 +42,10 @@ export function sandAutomata(x: number, y: number, cellType: Cell) {
         // randomly choose left or right
 
         if (Math.random() < 0.5) {
-            moveCell = leftCell;
+            moveCell = cellBelowRight;
             moveX = x - 1;
         } else {
-            moveCell = rightCell;
+            moveCell = cellBelowLeft;
             moveX = x + 1;
         }
 
@@ -63,10 +61,10 @@ export function sandAutomata(x: number, y: number, cellType: Cell) {
         // GAME_STATE.nextGrid[y + 1][x - 1] = 'sand';
         // GAME_STATE.nextGrid[y][x] = leftCell;
         moveX = x - 1;
-        moveCell = leftCell;
+        moveCell = cellBelowLeft;
     } else if (rightEmpty) {
         moveX = x + 1;
-        moveCell = rightCell;
+        moveCell = cellBelowRight;
         // GAME_STATE.nextGrid[y + 1][x + 1] = 'sand';
         // GAME_STATE.nextGrid[y][x] = rightCell;
     } else {
@@ -85,133 +83,169 @@ export function dirtAutomata(x: number, y: number, cellType: Cell) {
     cellType = GAME_STATE.nextGrid[y][x];
 
     try {
-        let belowCell = y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null;
-        let belowLeftCell = (x - 1 >= 0 && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x - 1] : null;
-        let belowRightCell = (x + 1 < GAME_STATE.width && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x + 1] : null;
-        let leftCell = x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null;
-        let rightCell = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null;
-        let topCell = y - 1 >= 0 ? GAME_STATE.nextGrid[y - 1][x] : null;
-        let topLeftCell = (x - 1 >= 0 && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x - 1] : null;
-        let topRightCell = (x + 1 < GAME_STATE.width && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x + 1] : null;
+        let {
+            cellBelow,
+            cellLeft,
+            cellRight,
+            cellAbove,
+            cellBelowLeft,
+            cellBelowRight,
+            cellAboveLeft,
+            cellAboveRight
+        } = getNeighborCells(x, y);
 
-        let neightborWaterCells = [];
+        let neighboringWaterCells = [];
         let neightborWetDirtCells = [];
-        let neightborDryDirtCells = [];
-        let neighbotEmptyCells = [];
+        let neightborDryDirtCellsBelow = [];
+        let neightborDryDirtCellsAbove = [];
+        let neighborEmptyCells = [];
 
-        if (WATER_CELLS.includes(belowCell)) {
-            neightborWaterCells.push({ x: x, y: y + 1 });
-        } else if (WET_DIRT_CELLS.includes(belowCell)) {
-            neightborWetDirtCells.push({ x: x, y: y + 1, cellType: belowCell });
-        } else if (DRY_DIRT_CELLS.includes(belowCell)) {
-            neightborDryDirtCells.push({ x: x, y: y + 1, cellType: belowCell });
-        } else if (belowCell === 'empty') {
-            neighbotEmptyCells.push({ x: x, y: y + 1 });
+        if (WATER_CELLS.includes(cellBelow)) {
+            neighboringWaterCells.push({ x: x, y: y + 1 });
+        } else if (WET_DIRT_CELLS.includes(cellBelow)) {
+            neightborWetDirtCells.push({ x: x, y: y + 1, cellType: cellBelow });
+        } else if (DRY_DIRT_CELLS.includes(cellBelow)) {
+            neightborDryDirtCellsBelow.push({ x: x, y: y + 1, cellType: cellBelow });
+        } else if (cellBelow === 'empty') {
+            neighborEmptyCells.push({ x: x, y: y + 1 });
         }
-        if (WATER_CELLS.includes(leftCell)) {
-            neightborWaterCells.push({ x: x - 1, y: y });
-        } else if (WET_DIRT_CELLS.includes(leftCell)) {
-            neightborWetDirtCells.push({ x: x - 1, y: y, cellType: leftCell });
-        } else if (DRY_DIRT_CELLS.includes(leftCell)) {
-            neightborDryDirtCells.push({ x: x - 1, y: y, cellType: leftCell });
-        } else if (leftCell === 'empty') {
-            neighbotEmptyCells.push({ x: x - 1, y: y });
+        if (WATER_CELLS.includes(cellLeft)) {
+            neighboringWaterCells.push({ x: x - 1, y: y });
+        } else if (WET_DIRT_CELLS.includes(cellLeft)) {
+            neightborWetDirtCells.push({ x: x - 1, y: y, cellType: cellLeft });
+        } else if (DRY_DIRT_CELLS.includes(cellLeft)) {
+            neightborDryDirtCellsBelow.push({ x: x - 1, y: y, cellType: cellLeft });
+        } else if (cellLeft === 'empty') {
+            neighborEmptyCells.push({ x: x - 1, y: y });
         }
-        if (WATER_CELLS.includes(rightCell)) {
-            neightborWaterCells.push({ x: x + 1, y: y });
-        } else if (WET_DIRT_CELLS.includes(rightCell)) {
-            neightborWetDirtCells.push({ x: x + 1, y: y, cellType: rightCell });
-        } else if (DRY_DIRT_CELLS.includes(rightCell)) {
-            neightborDryDirtCells.push({ x: x + 1, y: y, cellType: rightCell });
-        } else if (rightCell === 'empty') {
-            neighbotEmptyCells.push({ x: x + 1, y: y });
+        if (WATER_CELLS.includes(cellRight)) {
+            neighboringWaterCells.push({ x: x + 1, y: y });
+        } else if (WET_DIRT_CELLS.includes(cellRight)) {
+            neightborWetDirtCells.push({ x: x + 1, y: y, cellType: cellRight });
+        } else if (DRY_DIRT_CELLS.includes(cellRight)) {
+            neightborDryDirtCellsBelow.push({ x: x + 1, y: y, cellType: cellRight });
+        } else if (cellRight === 'empty') {
+            neighborEmptyCells.push({ x: x + 1, y: y });
         }
-        if (WATER_CELLS.includes(topCell)) {
-            neightborWaterCells.push({ x: x, y: y - 1 });
-        } else if (WET_DIRT_CELLS.includes(topCell)) {
-            neightborWetDirtCells.push({ x: x, y: y - 1, cellType: topCell });
-        } else if (DRY_DIRT_CELLS.includes(topCell)) {
-            neightborDryDirtCells.push({ x: x, y: y - 1, cellType: topCell });
-        } else if (topCell === 'empty') {
-            neighbotEmptyCells.push({ x: x, y: y - 1 });
+        if (WATER_CELLS.includes(cellAbove)) {
+            neighboringWaterCells.push({ x: x, y: y - 1 });
+        } else if (WET_DIRT_CELLS.includes(cellAbove)) {
+            neightborWetDirtCells.push({ x: x, y: y - 1, cellType: cellAbove });
+        } else if (DRY_DIRT_CELLS.includes(cellAbove)) {
+            neightborDryDirtCellsAbove.push({ x: x, y: y - 1, cellType: cellAbove });
+        } else if (cellAbove === 'empty') {
+            neighborEmptyCells.push({ x: x, y: y - 1 });
         }
-        if (WATER_CELLS.includes(belowLeftCell)) {
-            neightborWaterCells.push({ x: x - 1, y: y + 1 });
-        } else if (WET_DIRT_CELLS.includes(belowLeftCell)) {
-            neightborWetDirtCells.push({ x: x - 1, y: y + 1, cellType: belowLeftCell });
-        } else if (DRY_DIRT_CELLS.includes(belowLeftCell)) {
-            neightborDryDirtCells.push({ x: x - 1, y: y + 1, cellType: belowLeftCell });
-        } else if (belowLeftCell === 'empty') {
-            neighbotEmptyCells.push({ x: x - 1, y: y + 1 });
+        if (WATER_CELLS.includes(cellBelowLeft)) {
+            neighboringWaterCells.push({ x: x - 1, y: y + 1 });
+        } else if (WET_DIRT_CELLS.includes(cellBelowLeft)) {
+            neightborWetDirtCells.push({ x: x - 1, y: y + 1, cellType: cellBelowLeft });
+        } else if (DRY_DIRT_CELLS.includes(cellBelowLeft)) {
+            neightborDryDirtCellsBelow.push({ x: x - 1, y: y + 1, cellType: cellBelowLeft });
+        } else if (cellBelowLeft === 'empty') {
+            neighborEmptyCells.push({ x: x - 1, y: y + 1 });
         }
-        if (WATER_CELLS.includes(belowRightCell)) {
-            neightborWaterCells.push({ x: x + 1, y: y + 1 });
-        } else if (WET_DIRT_CELLS.includes(belowRightCell)) {
-            neightborWetDirtCells.push({ x: x + 1, y: y + 1, cellType: belowRightCell });
-        } else if (DRY_DIRT_CELLS.includes(belowRightCell)) {
-            neightborDryDirtCells.push({ x: x + 1, y: y + 1, cellType: belowRightCell });
-        } else if (belowRightCell === 'empty') {
-            neighbotEmptyCells.push({ x: x + 1, y: y + 1 });
+        if (WATER_CELLS.includes(cellBelowRight)) {
+            neighboringWaterCells.push({ x: x + 1, y: y + 1 });
+        } else if (WET_DIRT_CELLS.includes(cellBelowRight)) {
+            neightborWetDirtCells.push({ x: x + 1, y: y + 1, cellType: cellBelowRight });
+        } else if (DRY_DIRT_CELLS.includes(cellBelowRight)) {
+            neightborDryDirtCellsBelow.push({ x: x + 1, y: y + 1, cellType: cellBelowRight });
+        } else if (cellBelowRight === 'empty') {
+            neighborEmptyCells.push({ x: x + 1, y: y + 1 });
         }
-        if (WATER_CELLS.includes(topLeftCell)) {
-            neightborWaterCells.push({ x: x - 1, y: y - 1 });
-        } else if (WET_DIRT_CELLS.includes(topLeftCell)) {
-            neightborWetDirtCells.push({ x: x - 1, y: y - 1, cellType: topLeftCell });
-        } else if (DRY_DIRT_CELLS.includes(topLeftCell)) {
-            neightborDryDirtCells.push({ x: x - 1, y: y - 1, cellType: topLeftCell });
-        } else if (topLeftCell === 'empty') {
-            neighbotEmptyCells.push({ x: x - 1, y: y - 1 });
+        if (WATER_CELLS.includes(cellAboveLeft)) {
+            neighboringWaterCells.push({ x: x - 1, y: y - 1 });
+        } else if (WET_DIRT_CELLS.includes(cellAboveLeft)) {
+            neightborWetDirtCells.push({ x: x - 1, y: y - 1, cellType: cellAboveLeft });
+        } else if (DRY_DIRT_CELLS.includes(cellAboveLeft)) {
+            neightborDryDirtCellsAbove.push({ x: x - 1, y: y - 1, cellType: cellAboveLeft });
+        } else if (cellAboveLeft === 'empty') {
+            neighborEmptyCells.push({ x: x - 1, y: y - 1 });
         }
-        if (WATER_CELLS.includes(topRightCell)) {
-            neightborWaterCells.push({ x: x + 1, y: y - 1 });
-        } else if (WET_DIRT_CELLS.includes(topRightCell)) {
-            neightborWetDirtCells.push({ x: x + 1, y: y - 1, cellType: topRightCell });
-        } else if (DRY_DIRT_CELLS.includes(topRightCell)) {
-            neightborDryDirtCells.push({ x: x + 1, y: y - 1, cellType: topRightCell });
-        } else if (topRightCell === 'empty') {
-            neighbotEmptyCells.push({ x: x + 1, y: y - 1 });
+        if (WATER_CELLS.includes(cellAboveRight)) {
+            neighboringWaterCells.push({ x: x + 1, y: y - 1 });
+        } else if (WET_DIRT_CELLS.includes(cellAboveRight)) {
+            neightborWetDirtCells.push({ x: x + 1, y: y - 1, cellType: cellAboveRight });
+        } else if (DRY_DIRT_CELLS.includes(cellAboveRight)) {
+            neightborDryDirtCellsAbove.push({ x: x + 1, y: y - 1, cellType: cellAboveRight });
+        } else if (cellAboveRight === 'empty') {
+            neighborEmptyCells.push({ x: x + 1, y: y - 1 });
         }
 
 
         if (DRY_DIRT_CELLS.includes(cellType)) {
             let waterTransferCells = [];
-            if (neightborWaterCells.length > 0) {
-                let choice = neightborWaterCells[Math.floor(Math.random() * neightborWaterCells.length)];
+            if (neighboringWaterCells.length > 0) {
+                let choice = neighboringWaterCells[Math.floor(Math.random() * neighboringWaterCells.length)];
                 GAME_STATE.nextGrid[choice.y][choice.x] = 'empty';
-                cellType = (cellType === 'dirt' ? 'wet-dirt' : 'wet-dirt-with-seed');
+                cellType = (cellType === 'dirt' ? 'wet-dirt' : `wet-dirt-with-seed-${GAME_STATE._tickCount}`);
                 GAME_STATE.nextGrid[y][x] = cellType;
+
+                // prioritize watering dry dirt below first
+                if (neightborDryDirtCellsBelow.length > 0) {
+                    let choice = neightborDryDirtCellsBelow[Math.floor(Math.random() * neightborDryDirtCellsBelow.length)];
+                    GAME_STATE.nextGrid[choice.y][choice.x] = (choice.cellType === 'dirt' ? 'wet-dirt' : `wet-dirt-with-seed-${GAME_STATE._tickCount}`);
+                    return;
+                }
+                if (neightborDryDirtCellsAbove.length > 0) {
+                    let choice = neightborDryDirtCellsAbove[Math.floor(Math.random() * neightborDryDirtCellsAbove.length)];
+                    GAME_STATE.nextGrid[choice.y][choice.x] = (choice.cellType === 'dirt' ? 'wet-dirt' : `wet-dirt-with-seed-${GAME_STATE._tickCount}`);
+                }
                 return;
             }
         }
-
-
         
-        if (WET_DIRT_CELLS.includes(cellType) && GAME_STATE._tickCount % 5 == 0) {
+        // if (WET_DIRT_CELLS.includes(cellType) && GAME_STATE._tickCount % 5 == 0) {
 
-            let waterTransferCells = [];
-            if (DRY_DIRT_CELLS.includes(belowCell)) {
-                waterTransferCells.push({ x: x, y: y + 1, cellType: belowCell });
-            }
-            if (DRY_DIRT_CELLS.includes(belowLeftCell)) {
-                waterTransferCells.push({ x: x - 1, y: y, cellType: belowLeftCell });
-            }
-            if (DRY_DIRT_CELLS.includes(belowRightCell)) {
-                waterTransferCells.push({ x: x + 1, y: y + 1, cellType: belowRightCell });
-            }
-            if (waterTransferCells.length > 0) {
-                const choice = waterTransferCells[Math.floor(Math.random() * waterTransferCells.length)];
-                GAME_STATE.nextGrid[choice.y][choice.x] = (choice.cellType === 'dirt' ? 'wet-dirt' : 'wet-dirt-with-seed');
-                cellType = (cellType === 'wet-dirt' ? 'dirt' : 'dirt-with-seed');
-                GAME_STATE.nextGrid[y][x] = cellType;
-            }
-        }
+        //     let waterTransferCells = [];
+        //     if (DRY_DIRT_CELLS.includes(belowCell)) {
+        //         waterTransferCells.push({ x: x, y: y + 1, cellType: belowCell });
+        //     }
+        //     if (DRY_DIRT_CELLS.includes(belowLeftCell)) {
+        //         waterTransferCells.push({ x: x - 1, y: y, cellType: belowLeftCell });
+        //     }
+        //     if (DRY_DIRT_CELLS.includes(belowRightCell)) {
+        //         waterTransferCells.push({ x: x + 1, y: y + 1, cellType: belowRightCell });
+        //     }
+        //     if (waterTransferCells.length > 0) {
+        //         const choice = waterTransferCells[Math.floor(Math.random() * waterTransferCells.length)];
+        //         GAME_STATE.nextGrid[choice.y][choice.x] = (choice.cellType === 'dirt' ? 'wet-dirt' : 'wet-dirt-with-seed');
+        //         cellType = (cellType === 'wet-dirt' ? 'dirt' : 'dirt-with-seed');
+        //         GAME_STATE.nextGrid[y][x] = cellType;
+        //     }
+        // }
 
         if (WET_DIRT_CELLS.includes(cellType) &&
             GAME_STATE._tickCount % 17 == 0
         ) {
-            let chanceToDry = 0.005;
-            if (Math.random() < chanceToDry) {
-                if (neighbotEmptyCells.length > 0 || neightborDryDirtCells.length > 0) {
+            // if (
+            //     neighboringWaterCells.length === 0 &&
+            //     (
+            //         neighborEmptyCells.length > 0 ||
+            //         neightborWetDirtCells.length < 3
+            //     )
+            // ) {
+            // check if there is a water cell within 2 cells
+            let foundWaterNearby = false;
+            for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                    if (dx === 0 && dy === 0) continue;
+                    let checkX = x + dx;
+                    let checkY = y + dy;
+                    if (checkX >= 0 && checkX < GAME_STATE.width && checkY >= 0 && checkY < GAME_STATE.height) {
+                        let checkCell = GAME_STATE.nextGrid[checkY][checkX];
+                        if (WATER_CELLS.includes(checkCell) || STEAM_ENGINE_CELLS.includes(checkCell)) {
+                            foundWaterNearby = true;
+                            break;
+                        }
+                    }
+                }
+                if (foundWaterNearby) break;
+            }
+            if (!foundWaterNearby) {
+                let chanceToDry = 0.005;
+                if (Math.random() < chanceToDry) {
                     cellType = (cellType === 'wet-dirt' ? 'dirt' : 'dirt-with-seed');
                     GAME_STATE.nextGrid[y][x] = cellType;
                 }
@@ -234,13 +268,9 @@ export function waterAutomata(x: number, y: number, waterCellType: Cell) {
         return;
     } // at bottom edge
 
-    let belowCell = y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null;
-    let leftCell = x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null;
-    let rightCell = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null;
-    let bottomLeftCell = (x - 1 >= 0 && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x - 1] : null;
-    let bottomRightCell = (x + 1 < GAME_STATE.width && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x + 1] : null;
+    let { cellBelow, cellLeft, cellRight, cellBelowLeft, cellBelowRight } = getNeighborCells(x, y);
 
-    if (FALL_CELLS.includes(belowCell)) {
+    if (FALL_CELLS.includes(cellBelow)) {
         if (holeCheck({ x, y }, { x: x, y: y + 1 })) {
             return;
         }
@@ -255,13 +285,13 @@ export function waterAutomata(x: number, y: number, waterCellType: Cell) {
         let emptyCells = [];
         let foundDirected = null;
 
-        if (FALL_CELLS.includes(bottomLeftCell)) {
+        if (FALL_CELLS.includes(cellBelowLeft)) {
             if (waterCellType === 'water-left') {
                 foundDirected = 'bottom-left';
             }
             emptyCells.push('bottom-left');
         }
-        if (FALL_CELLS.includes(bottomRightCell)) {
+        if (FALL_CELLS.includes(cellBelowRight)) {
             if (waterCellType === 'water-right') {
                 foundDirected = 'bottom-right';
             }
@@ -270,13 +300,13 @@ export function waterAutomata(x: number, y: number, waterCellType: Cell) {
 
         // prioritize bottom left/right over left/right
         if (emptyCells.length === 0) {
-            if (FALL_CELLS.includes(leftCell)) {
+            if (FALL_CELLS.includes(cellLeft)) {
                 if (waterCellType === 'water-left') {
                     foundDirected = 'left';
                 }
                 emptyCells.push('left');
             }
-            if (FALL_CELLS.includes(rightCell)) {
+            if (FALL_CELLS.includes(cellRight)) {
                 if (waterCellType === 'water-right') {
                     foundDirected = 'right';
                 }
@@ -286,8 +316,9 @@ export function waterAutomata(x: number, y: number, waterCellType: Cell) {
 
         // no empty cells to move into
         if (emptyCells.length === 0) {
-            GAME_STATE.nextGrid[y][x] = 'water';
-            waterVaporCheck({ x, y });
+            // GAME_STATE.nextGrid[y][x] = 'water';
+            // not sure if I like water vapor
+            // waterVaporCheck({ x, y });
             return; // cannot move
         }
 
@@ -295,24 +326,24 @@ export function waterAutomata(x: number, y: number, waterCellType: Cell) {
         switch (choice) {
             case 'left':
                 moveX = x - 1;
-                moveCell = leftCell;
+                moveCell = cellLeft;
                 waterCellType = 'water-left';
                 break;
             case 'right':
                 moveX = x + 1;
-                moveCell = rightCell;
+                moveCell = cellRight;
                 waterCellType = 'water-right';
                 break;
             case 'bottom-left':
                 moveX = x - 1;
                 moveY = y + 1;
-                moveCell = bottomLeftCell;
+                moveCell = cellBelowLeft;
                 waterCellType = 'water-left';
                 break;
             case 'bottom-right':
                 moveX = x + 1;
                 moveY = y + 1;
-                moveCell = bottomRightCell;
+                moveCell = cellBelowRight;
                 waterCellType = 'water-right';
                 break;
         }
@@ -349,14 +380,13 @@ export function holeCheck(myPos: { x: number, y: number }, targetPos: { x: numbe
 }
 
 export function waterAutomataBuoyancy(x: number, y: number, cellType: Cell) {
-    const belowCell = y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null;
-    const leftBelowCell = (x - 1 >= 0 && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x - 1] : null;
-    const rightBelowCell = (x + 1 < GAME_STATE.width && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x + 1] : null;
+   
+    let { cellBelow, cellBelowLeft, cellBelowRight } = getNeighborCells(x, y);
 
     const FALL_STRAIGHT_DOWN_CELLS = ['seed'];
 
     let waterBelowCells = [];
-    if (WATER_CELLS.includes(belowCell)) {
+    if (WATER_CELLS.includes(cellBelow)) {
         waterBelowCells.push('center');
 
         if (FALL_STRAIGHT_DOWN_CELLS.includes(cellType)) {
@@ -365,10 +395,10 @@ export function waterAutomataBuoyancy(x: number, y: number, cellType: Cell) {
             return;
         }
     }
-    if (WATER_CELLS.includes(leftBelowCell)) {
+    if (WATER_CELLS.includes(cellBelowLeft)) {
         waterBelowCells.push('left');
     }
-    if (WATER_CELLS.includes(rightBelowCell)) {
+    if (WATER_CELLS.includes(cellBelowRight)) {
         waterBelowCells.push('right');
     }
     // if (y + 2 == GAME_STATE.height) {
@@ -529,20 +559,16 @@ export function fireAutomata(x: number, y: number, cellType: Cell) {
 
     const FIRE_INTERACT_CELLS = [...FALL_CELLS, ...WATER_CELLS];
 
-    let aboveCell = y - 1 >= 0 ? GAME_STATE.nextGrid[y - 1][x] : null;
-    let leftCell = x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null;
-    let rightCell = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null;
-    let leftUpperCell = (x - 1 >= 0 && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x - 1] : null;
-    let rightUpperCell = (x + 1 < GAME_STATE.width && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x + 1] : null;
+    let { cellAbove, cellLeft, cellRight, cellAboveLeft, cellAboveRight } = getNeighborCells(x, y);
 
     let fireAboveCells = [];
-    if (FIRE_INTERACT_CELLS.includes(aboveCell)) {
+    if (FIRE_INTERACT_CELLS.includes(cellAbove)) {
         fireAboveCells.push('center');
     }
-    if (FIRE_INTERACT_CELLS.includes(leftUpperCell)) {
+    if (FIRE_INTERACT_CELLS.includes(cellAboveLeft)) {
         fireAboveCells.push('left-upper');
     }
-    if (FIRE_INTERACT_CELLS.includes(rightUpperCell)) {
+    if (FIRE_INTERACT_CELLS.includes(cellAboveRight)) {
         fireAboveCells.push('right-upper');
     }
 
@@ -556,24 +582,24 @@ export function fireAutomata(x: number, y: number, cellType: Cell) {
         switch (choice) {
             case 'center':
                 moveY = y - 1;
-                moveCell = aboveCell;
+                moveCell = cellAbove;
                 break;
             case 'left-upper':
                 moveX = x - 1;
                 moveY = y - 1;
-                moveCell = leftUpperCell;
+                moveCell = cellAboveLeft;
                 break;
             case 'right-upper':
                 moveX = x + 1;
                 moveY = y - 1;
-                moveCell = rightUpperCell;
+                moveCell = cellAboveRight;
                 break;
         } 
     } else {
-        if (FIRE_INTERACT_CELLS.includes(leftCell)) {
+        if (FIRE_INTERACT_CELLS.includes(cellLeft)) {
             fireAboveCells.push('left');
         }
-        if (FIRE_INTERACT_CELLS.includes(rightCell)) {
+        if (FIRE_INTERACT_CELLS.includes(cellRight)) {
             fireAboveCells.push('right');
         }
         if (fireAboveCells.length === 0) {
@@ -585,11 +611,11 @@ export function fireAutomata(x: number, y: number, cellType: Cell) {
         switch (choice) {
             case 'left':
                 moveX = x - 1;
-                moveCell = leftCell;
+                moveCell = cellLeft;
                 break;
             case 'right':
                 moveX = x + 1;
-                moveCell = rightCell;
+                moveCell = cellRight;
                 break;
         }
     }
@@ -629,28 +655,24 @@ export function gasAutomata(x: number, y: number, cellType: Cell) {
     const STEAM_INTERACTION_CELLS = [...FALL_CELLS, ...STEAM_ENGINE_CELLS];
     const VAPOR_INTERACTION_CELLS = [...FALL_CELLS, ...WATER_VAPOR_CELLS.filter(c => c !== 'water-vapor-4')];
 
-    let aboveCell = y - 1 >= 0 ? GAME_STATE.nextGrid[y - 1][x] : null;
-    let leftCell = x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null;
-    let rightCell = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null;
-    let leftUpperCell = (x - 1 >= 0 && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x - 1] : null;
-    let rightUpperCell = (x + 1 < GAME_STATE.width && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x + 1] : null;
+    let { cellAbove, cellLeft, cellRight, cellAboveLeft, cellAboveRight } = getNeighborCells(x, y);
 
     let fallAboveCells = [];
     if (
-        (STEAM_INTERACTION_CELLS.includes(aboveCell) && cellType === 'steam') ||
-        (VAPOR_INTERACTION_CELLS.includes(aboveCell) && cellType.startsWith('water-vapor'))
+        (STEAM_INTERACTION_CELLS.includes(cellAbove) && cellType === 'steam') ||
+        (VAPOR_INTERACTION_CELLS.includes(cellAbove) && cellType.startsWith('water-vapor'))
     ) {
         fallAboveCells.push('center');
     }
     if (
-        (STEAM_INTERACTION_CELLS.includes(leftUpperCell) && cellType === 'steam') ||
-        (VAPOR_INTERACTION_CELLS.includes(leftUpperCell) && cellType.startsWith('water-vapor'))
+        (STEAM_INTERACTION_CELLS.includes(cellAboveLeft) && cellType === 'steam') ||
+        (VAPOR_INTERACTION_CELLS.includes(cellAboveLeft) && cellType.startsWith('water-vapor'))
     ) {
         fallAboveCells.push('left-upper');
     }
     if (
-        (STEAM_INTERACTION_CELLS.includes(rightUpperCell) && cellType === 'steam') ||
-        (VAPOR_INTERACTION_CELLS.includes(rightUpperCell) && cellType.startsWith('water-vapor'))
+        (STEAM_INTERACTION_CELLS.includes(cellAboveRight) && cellType === 'steam') ||
+        (VAPOR_INTERACTION_CELLS.includes(cellAboveRight) && cellType.startsWith('water-vapor'))
     ) {
         fallAboveCells.push('right-upper');
     }
@@ -665,24 +687,24 @@ export function gasAutomata(x: number, y: number, cellType: Cell) {
         switch (choice) {
             case 'center':
                 moveY = y - 1;
-                moveCell = aboveCell;
+                moveCell = cellAbove;
                 break;
             case 'left-upper':
                 moveX = x - 1;
                 moveY = y - 1;
-                moveCell = leftUpperCell;
+                moveCell = cellAboveLeft;
                 break;
             case 'right-upper':
                 moveX = x + 1;
                 moveY = y - 1;
-                moveCell = rightUpperCell;
+                moveCell = cellAboveRight;
                 break;
         } 
     } else {
-        if (STEAM_INTERACTION_CELLS.includes(leftCell)) {
+        if (STEAM_INTERACTION_CELLS.includes(cellLeft)) {
             fallAboveCells.push('left');
         }
-        if (STEAM_INTERACTION_CELLS.includes(rightCell)) {
+        if (STEAM_INTERACTION_CELLS.includes(cellRight)) {
             fallAboveCells.push('right');
         }
         if (fallAboveCells.length === 0) {
@@ -693,11 +715,11 @@ export function gasAutomata(x: number, y: number, cellType: Cell) {
         switch (choice) {
             case 'left':
                 moveX = x - 1;
-                moveCell = leftCell;
+                moveCell = cellLeft;
                 break;
             case 'right':
                 moveX = x + 1;
-                moveCell = rightCell;
+                moveCell = cellRight;
                 break;
         }
     }
@@ -766,10 +788,7 @@ function vaporInteraction(pos: { x: number, y: number }, targetPos: { x: number,
 
 export function steamEngineAutomata(x: number, y: number, cellType: Cell) {
     let engineState = parseInt(cellType.split('-')[2]);
-    let leftNeighbor = x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null;
-    let rightNeighbor = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null;
-    let aboveNeighbor = y - 1 >= 0 ? GAME_STATE.nextGrid[y - 1][x] : null;
-    let belowNeighbor = y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null;
+    let { cellAbove, cellLeft, cellRight, cellBelow } = getNeighborCells(x, y);
 
     let canPassPowerCells = [];
     let wirePassCells = [];
@@ -784,16 +803,16 @@ export function steamEngineAutomata(x: number, y: number, cellType: Cell) {
 
     if (engineState === 4) {
         // wire check
-        if (leftNeighbor === 'wire') {
+        if (cellLeft === 'wire') {
             wirePassCells.push('left');
         }
-        if (rightNeighbor === 'wire') {
+        if (cellRight === 'wire') {
             wirePassCells.push('right');
         }
-        if (aboveNeighbor === 'wire') {
+        if (cellAbove === 'wire') {
             wirePassCells.push('above');
         }
-        if (belowNeighbor === 'wire') {
+        if (cellBelow === 'wire') {
             wirePassCells.push('below');
         }
 
@@ -819,26 +838,26 @@ export function steamEngineAutomata(x: number, y: number, cellType: Cell) {
     }
 
 
-    if (STEAM_ENGINE_CELLS.includes(leftNeighbor)) {
-        let neighborState = parseInt(leftNeighbor.split('-')[2]);
+    if (STEAM_ENGINE_CELLS.includes(cellLeft)) {
+        let neighborState = parseInt(cellLeft.split('-')[2]);
         if (neighborState < engineState) {
             canPassPowerCells.push('left');
         }
     }
-    if (STEAM_ENGINE_CELLS.includes(rightNeighbor)) {
-        let neighborState = parseInt(rightNeighbor.split('-')[2]);
+    if (STEAM_ENGINE_CELLS.includes(cellRight)) {
+        let neighborState = parseInt(cellRight.split('-')[2]);
         if (neighborState < engineState) {
             canPassPowerCells.push('right');
         }
     }
-    if (STEAM_ENGINE_CELLS.includes(aboveNeighbor)) {
-        let neighborState = parseInt(aboveNeighbor.split('-')[2]);
+    if (STEAM_ENGINE_CELLS.includes(cellAbove)) {
+        let neighborState = parseInt(cellAbove.split('-')[2]);
         if (neighborState < engineState) {
             canPassPowerCells.push('above');
         }
     }
-    if (STEAM_ENGINE_CELLS.includes(belowNeighbor)) {
-        let neighborState = parseInt(belowNeighbor.split('-')[2]);
+    if (STEAM_ENGINE_CELLS.includes(cellBelow)) {
+        let neighborState = parseInt(cellBelow.split('-')[2]);
         if (neighborState < engineState) {
             canPassPowerCells.push('below');
         }
@@ -854,19 +873,19 @@ export function steamEngineAutomata(x: number, y: number, cellType: Cell) {
     let neighborState;
     switch (targetCell) {
         case 'left':
-            neighborState = parseInt(leftNeighbor.split('-')[2]);
+            neighborState = parseInt(cellLeft.split('-')[2]);
             GAME_STATE.nextGrid[y][x - 1] = `steam-engine-${Math.min(neighborState + 1, 4)}` as Cell;
             break;
         case 'right':
-            neighborState = parseInt(rightNeighbor.split('-')[2]);
+            neighborState = parseInt(cellRight.split('-')[2]);
             GAME_STATE.nextGrid[y][x + 1] = `steam-engine-${Math.min(neighborState + 1, 4)}` as Cell;
             break;
         case 'above':
-            neighborState = parseInt(aboveNeighbor.split('-')[2]);
+            neighborState = parseInt(cellAbove.split('-')[2]);
             GAME_STATE.nextGrid[y - 1][x] = `steam-engine-${Math.min(neighborState + 1, 4)}` as Cell;
             break;
         case 'below':
-            neighborState = parseInt(belowNeighbor.split('-')[2]);
+            neighborState = parseInt(cellBelow.split('-')[2]);
             GAME_STATE.nextGrid[y + 1][x] = `steam-engine-${Math.min(neighborState + 1, 4)}` as Cell;
             break;
     }
@@ -876,10 +895,7 @@ export function steamEngineAutomata(x: number, y: number, cellType: Cell) {
 
 export function wireAutomata(x: number, y: number, cellType: Cell) {
     let cellAtPos = GAME_STATE.nextGrid[y][x];
-    let cellAtRight = x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null;
-    let cellAtLeft = x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null;
-    let cellAtBelow = y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null;
-    let cellAtAbove = y - 1 >= 0 ? GAME_STATE.nextGrid[y - 1][x] : null;
+    let { cellLeft, cellRight, cellAbove, cellBelow } = getNeighborCells(x, y);
 
     const POWER_PASS_CELLS = ['sand-portal-0', 'sand-portal-1', 'sand-portal-2', 'sand-portal-3', 'sand-portal-4', 'sand-portal-5', 'sand-portal-6', 'sand-portal-7', 'sand-portal-8'];
 
@@ -890,16 +906,16 @@ export function wireAutomata(x: number, y: number, cellType: Cell) {
     let cameFromDirections = cellType.split('-')[2]; // e.g., 'p-l', 'p-d-u', etc.
     
     let passDirections = [];
-    if (POWER_PASS_CELLS.includes(cellAtRight) && !cameFromDirections.includes('r')) {
+    if (POWER_PASS_CELLS.includes(cellRight) && !cameFromDirections.includes('r')) {
         passDirections.push('right');
     }
-    if (POWER_PASS_CELLS.includes(cellAtLeft) && !cameFromDirections.includes('l')) {
+    if (POWER_PASS_CELLS.includes(cellLeft) && !cameFromDirections.includes('l')) {
         passDirections.push('left');
     }
-    if (POWER_PASS_CELLS.includes(cellAtBelow) && !cameFromDirections.includes('d')) {
+    if (POWER_PASS_CELLS.includes(cellBelow) && !cameFromDirections.includes('d')) {
         passDirections.push('below');
     }
-    if (POWER_PASS_CELLS.includes(cellAtAbove) && !cameFromDirections.includes('u')) {
+    if (POWER_PASS_CELLS.includes(cellAbove) && !cameFromDirections.includes('u')) {
         passDirections.push('above');
     }
 
@@ -923,16 +939,16 @@ export function wireAutomata(x: number, y: number, cellType: Cell) {
         return;
     }
 
-    if (cellAtRight == 'wire' && !cameFromDirections.includes('r')) {
+    if (cellRight == 'wire' && !cameFromDirections.includes('r')) {
         passDirections.push('right');
     }
-    if (cellAtLeft == 'wire' && !cameFromDirections.includes('l')) {
+    if (cellLeft == 'wire' && !cameFromDirections.includes('l')) {
         passDirections.push('left');
     }
-    if (cellAtBelow == 'wire' && !cameFromDirections.includes('d')) {
+    if (cellBelow == 'wire' && !cameFromDirections.includes('d')) {
         passDirections.push('below');
     }
-    if (cellAtAbove == 'wire' && !cameFromDirections.includes('u')) {
+    if (cellAbove == 'wire' && !cameFromDirections.includes('u')) {
         passDirections.push('above');
     }
 
@@ -971,20 +987,197 @@ function handleWirePowerPass(pos: { x: number, y: number }, targetPos: { x: numb
 
 export function seedAutomata(x: number, y: number, cellType: Cell) {
 
-    let belowCell = y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null;
-    let belowLeftCell = (x - 1 >= 0 && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x - 1] : null;
-    let belowRightCell = (x + 1 < GAME_STATE.width && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x + 1] : null;
+    let { cellBelow, cellAbove } = getNeighborCells(x, y);
 
     const DIRT_TYPES = ['dirt', 'wet-dirt'];
 
-    if (DIRT_TYPES.includes(belowCell)) {
-        GAME_STATE.nextGrid[y + 1][x] = (belowCell == 'dirt' ? 'dirt-with-seed' : 'wet-dirt-with-seed');
-        GAME_STATE.nextGrid[y][x] = 'empty';
-        console.log('Seed planted downward at', x, y);
+    if (DIRT_TYPES.includes(cellBelow)) {
+
+        // this logic isnt great, forsure doesn't work well in every situation
+        let replaceType: Cell = 'empty';
+        if (cellAbove == 'water') {
+            replaceType = 'water';
+        }
+
+        GAME_STATE.nextGrid[y + 1][x] = (cellBelow == 'dirt' ? 'dirt-with-seed' : `wet-dirt-with-seed-${GAME_STATE._tickCount}`);
+        GAME_STATE.nextGrid[y][x] = replaceType;
         return;
     }
 
+    // if ()
+
     sandAutomata(x, y, cellType);
+}
+
+export function wetDirtWithSeedAutomata(x: number, y: number, cellType: Cell) {
+    let { cellAbove, cellAboveLeft, cellAboveRight } = getNeighborCells(x, y);
+
+    if (cellAbove === 'empty' && cellAboveLeft === 'empty' && cellAboveRight === 'empty') {
+        trunkGrow(x, y, cellType);
+        return;
+    }
+
+    if (WATER_CELLS.includes(cellAbove) && (WATER_CELLS.includes(cellAboveLeft) || WATER_CELLS.includes(cellAboveRight))) {
+        seaweedGrow(x, y, cellType);
+        return;
+    }
+
+
+}
+
+const TREE_TRUNK_COLORS = ['#1d0f05ff', '#bdbdbdff', '#241409ff', '#462708ff', '#130e09ff'];
+
+function trunkGrow(x: number, y: number, cellType: Cell) {
+    let growChance = 0.01;
+    if (Math.random() < growChance) {
+        let trunkHeight = 3 + Math.floor(Math.random() * 3);
+        let color = TREE_TRUNK_COLORS[Math.floor(Math.random() * TREE_TRUNK_COLORS.length)];
+        GAME_STATE.nextGrid[y - 1][x] = `trunk-${trunkHeight}-${GAME_STATE._tickCount}-${color}`;
+    }
+}
+
+function seaweedGrow(x: number, y: number, cellType: Cell) {
+
+    let growChance = 0.5;
+    if (Math.random() < growChance) {
+        let randomGreenValue = Math.floor(Math.random() * 50) + 100; // 140 to 255
+        let trunkHeight = 3;
+        let seaweedCell = `seaweed-${trunkHeight}-${GAME_STATE._tickCount}-${randomGreenValue}`;
+        console.log('growing new seaweed', seaweedCell);
+        GAME_STATE.nextGrid[y - 1][x] = seaweedCell as Cell;
+    }
+}
+
+export function trunkAutomata(x: number, y: number, cellType: Cell) {
+    let trunkHeight = parseInt(cellType.split('-')[1]);
+    let color = cellType.split('-')[3];
+
+    let { cellAbove } = getNeighborCells(x, y);
+    if (cellAbove !== 'empty') {
+        return;
+    }
+
+    if (GAME_STATE._tickCount % 20 == 0 && trunkHeight > 0) {
+        let growChance = 0.5;
+        if (Math.random() < growChance) {
+            console.log('growing trunk at', x, y, color);
+            GAME_STATE.nextGrid[y - 1][x] = `trunk-${trunkHeight - 1}-${GAME_STATE._tickCount}-${color}`;
+        }
+    }
+
+}
+
+export function seaweedAutomata(x: number, y: number, cellType: Cell) {
+    let seaweedHeight = parseInt(cellType.split('-')[1]);
+    let { cellAbove } = getNeighborCells(x, y);
+    if (cellAbove !== 'water') {
+        return;
+    }
+
+    if (GAME_STATE._tickCount % 20 == 0 && seaweedHeight > 0) {
+        let growChance = 0.1;
+        if (Math.random() < growChance) {
+            let startingTickCount = cellType.split('-')[2];
+            // GAME_STATE.nextGrid[y - 1][x] = `seaweed-${seaweedHeight - 1}-${GAME_STATE._tickCount}-${cellBelowGreen}`;
+            GAME_STATE.nextGrid[y - 1][x] = `seaweed-${seaweedHeight - 1}-${+startingTickCount}`;
+        }
+    }
+
+    sandAutomata(x, y, cellType);
+}
+
+export function fishAutomata(x: number, y: number, cellType: Cell) {
+    let { cellLeft, cellRight, cellAbove, cellBelow } = getNeighborCells(x, y);
+    let fishStatus = cellType.split('-')[1];
+    let nextMove = +cellType.split('-')[2];
+    let fishType = cellType.split('-')[3];
+
+
+    if (FALL_CELLS.includes(cellBelow)) {
+        if (holeCheck({ x, y }, { x: x, y: y + 1 })) {
+            return;
+        }
+        GAME_STATE.nextGrid[y + 1][x] = `fish-falling-${nextMove}-${fishType}` as Cell;
+        GAME_STATE.nextGrid[y][x] = cellBelow;
+        return;
+    }
+
+    if (fishStatus == 'falling' && (WATER_CELLS.includes(cellBelow))) {
+        GAME_STATE.nextGrid[y + 1][x] = `fish-swimming-${nextMove}-${fishType}` as Cell;
+        GAME_STATE.nextGrid[y][x] = 'empty';
+        return;
+    }
+
+    if (fishStatus == 'swimming' && (GAME_STATE._tickCount) % nextMove === 0) {
+        let waterCells = [];
+        if (WATER_CELLS.includes(cellLeft)) {
+            waterCells.push('left');
+        }
+        if (WATER_CELLS.includes(cellRight)) {
+            waterCells.push('right');
+        }
+        if (WATER_CELLS.includes(cellAbove)) {
+            waterCells.push('above');
+        }
+        if (WATER_CELLS.includes(cellBelow)) {
+            waterCells.push('below');
+        }
+        if (waterCells.length == 0) {
+            return;
+        }
+        const choice = waterCells[Math.floor(Math.random() * waterCells.length)];
+        let moveX = x;
+        let moveY = y;
+        let moveCell = null;
+        switch (choice) {
+            case 'left':
+                moveX = x - 1;
+                moveCell = cellLeft;
+                break;
+            case 'right':
+                moveX = x + 1;
+                moveCell = cellRight;
+                break;
+            case 'above':
+                moveY = y - 1;
+                moveCell = cellAbove;
+                break;
+            case 'below':
+                moveY = y + 1;
+                moveCell = cellBelow;
+                break;
+        }
+        let nextMove = Math.floor(Math.random() * 30) + 60;
+        GAME_STATE.nextGrid[moveY][moveX] = `fish-swimming-${nextMove}-${fishType}` as Cell;
+        GAME_STATE.nextGrid[y][x] = moveCell;
+        return;
+    }
+}
+
+function getNeighborCells(x: number, y: number): 
+{
+    cellLeft: Cell | null,
+    cellRight: Cell | null,
+    cellAbove: Cell | null,
+    cellBelow: Cell | null,
+    cellAboveLeft: Cell | null,
+    cellAboveRight: Cell | null,
+    cellBelowLeft: Cell | null,
+    cellBelowRight: Cell | null
+} {
+    let resp = {
+        cellLeft: x - 1 >= 0 ? GAME_STATE.nextGrid[y][x - 1] : null,
+        cellRight: x + 1 < GAME_STATE.width ? GAME_STATE.nextGrid[y][x + 1] : null,
+        cellAbove: y - 1 >= 0 ? GAME_STATE.nextGrid[y - 1][x] : null,
+        cellBelow: y + 1 < GAME_STATE.height ? GAME_STATE.nextGrid[y + 1][x] : null,
+        cellAboveLeft: (x - 1 >= 0 && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x - 1] : null,
+        cellAboveRight: (x + 1 < GAME_STATE.width && y - 1 >= 0) ? GAME_STATE.nextGrid[y - 1][x + 1] : null,
+        cellBelowLeft: (x - 1 >= 0 && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x - 1] : null,
+        cellBelowRight: (x + 1 < GAME_STATE.width && y + 1 < GAME_STATE.height) ? GAME_STATE.nextGrid[y + 1][x + 1] : null,
+    };
+
+    // console.log('neighbor cells at', x, y, resp);
+    return resp;
 }
 
 export function waterVaporAutomata(x: number, y: number, cellType: Cell) {

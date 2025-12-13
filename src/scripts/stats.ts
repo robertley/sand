@@ -17,7 +17,7 @@ export function updateStatsUI() {
         FPS_COUNTER.textContent = `${fpsCurrent.toFixed(0)}`;
     }
     if (MOUSE_SAND_PER_SECOND_DISPLAY) {
-        MOUSE_SAND_PER_SECOND_DISPLAY.textContent = `${GAME_STATE.sandPerSecond}/s`;
+        MOUSE_SAND_PER_SECOND_DISPLAY.textContent = `${GAME_STATE.mouseDropRate}/s`;
     }
     if (SAND_MULTIPLIER_DISPLAY) {
         SAND_MULTIPLIER_DISPLAY.textContent = `x${GAME_STATE.sandMultiplier?.toFixed(1) ?? 1}`;

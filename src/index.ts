@@ -3,7 +3,7 @@ import { GameState } from './interfaces/game-state.interface';
 import { Interaction } from './interfaces/interaction.type';
 import { Cell } from './interfaces/cell.type';
 import { checkButtonsDisabled, updateCanvasClass } from './scripts/buttons';
-import { dirtAutomata, fireAutomata, portalAutomata, portalAutomataUp, sandAutomata, seedAutomata, gasAutomata, steamEngineAutomata, waterAutomata, waterAutomataBuoyancy, wireAutomata } from './scripts/automata';
+import { dirtAutomata, fireAutomata, portalAutomata, portalAutomataUp, sandAutomata, seedAutomata, gasAutomata, steamEngineAutomata, waterAutomata, waterAutomataBuoyancy, wireAutomata, wetDirtWithSeedAutomata, trunkAutomata, seaweedAutomata, fishAutomata } from './scripts/automata';
 import { clickHandler, holdSpawnUpdate } from './scripts/controls';
 import { formInit } from './scripts/form';
 import { updateStatsUI } from './scripts/stats';
@@ -26,7 +26,7 @@ export function newGame() {
     GAME_STATE.height = 30;
     GAME_STATE.sandCount = 0;
     GAME_STATE.lastSandAddTime = 0;
-    GAME_STATE.sandPerSecond = 2;
+    GAME_STATE.mouseDropRate = 2;
     GAME_STATE.drawCell = 'sand';
     GAME_STATE.timesIncreasedGrid = 0;
     GAME_STATE.sandPortalRate = 1;
@@ -107,17 +107,19 @@ function drawCanvas(skipOptimization = false) {
     for (let y = 0; y < gridSizeHeight; y++) {
         for (let x = 0; x < gridSizeWidth; x++) {
             let cell = GAME_STATE.nextGrid[y][x];
+            let genericCellType = getGenericCellType(cell);
             if (
                 !skipOptimization &&
-                !SKIP_DRAW_CELLS.includes(cell) &&
-                GAME_STATE.grid[y][x] === cell &&
+                !SKIP_DRAW_CELLS.includes(genericCellType) &&
+                GAME_STATE.grid[y][x] === genericCellType &&
                 ADD_CELL_MAP.get(`${x},${y}`) === undefined
             ) {
                 continue;
             }
+            
 
             let fillStyle: string;
-            switch (cell) {
+            switch (genericCellType) {
                 case 'sand':
                     fillStyle = '#c2b280';
                     break;
@@ -230,6 +232,32 @@ function drawCanvas(skipOptimization = false) {
                 case 'water-vapor-4':
                     fillStyle = '#ffffff93';
                     break;
+                case 'trunk':
+                    let trunkColor = cell.split('-')[3];
+                    fillStyle = trunkColor;
+                    break;
+                case 'seaweed':
+                    let heightIndex = +cell.split('-')[1];
+                    let tickCount = +cell.split('-')[2];
+                    let green = 140;
+                    let greenOffsetComparorator = (GAME_STATE._tickCount + tickCount + (heightIndex * 10)) % 40;
+                    if (greenOffsetComparorator % 40 < 10) {
+                        green += 8;
+                    } else if (greenOffsetComparorator % 40 < 20) {
+                        green += 16;
+                    } else if (greenOffsetComparorator % 40 < 30) {
+                        green += 24;
+                    } else if (greenOffsetComparorator % 40 < 40) {
+                        green += 16;
+                    }
+
+                    let greenHex = green.toString(16).padStart(2, '0');
+                    let color = `#00${greenHex}00`;
+                    fillStyle = color;
+                    break;
+                case 'fish':
+                    fillStyle = '#ff9900ff';
+                    break;
                 default:
                     console.log('unknown cell type in drawCanvas:', cell);
                     fillStyle = 'rgba(255, 0, 212, 1)';
@@ -335,6 +363,7 @@ function update() {
     drawCanvas();
     updateGameStateGrid();
     updateStatsUI();
+    updateSandPerSecond();
     ADD_CELL_MAP.clear();
     GAME_STATE._tickCount++;
 }
@@ -374,27 +403,6 @@ function runCellularAutomata() {
         }
     }
 
-    // let shuffledCells = [];
-    // let nonShuffledCells = [];
-    // const NON_SHUFFLED_CELLS = ['wet-dirt'];
-    
-    // for (let cell of cellsToProcess) {
-    //     if (NON_SHUFFLED_CELLS.includes(cell.type)) {
-    //         nonShuffledCells.push(cell);
-    //     }
-    //     else {
-    //         shuffledCells.push(cell);
-    //     }
-    // }
-
-    // // shuffle cellsToProcess to randomize processing order
-    // for (let i = shuffledCells.length - 1; i > 0; i--) {
-    //     const j = Math.floor(Math.random() * (i + 1));
-    //     [shuffledCells[i], shuffledCells[j]] = [shuffledCells[j], shuffledCells[i]];
-    // }
-
-    // cellsToProcess = [...shuffledCells, ...nonShuffledCells];
-
     // shuffle cellsToProcess to randomize processing order
     for (let i = cellsToProcess.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -402,14 +410,16 @@ function runCellularAutomata() {
     }
 
     for (let cell of cellsToProcess) {
-        switch (cell.type) {
+        let genericType = getGenericCellType(cell.type);
+        switch (genericType) {
             case 'sand':
                 sandAutomata(cell.x, cell.y, cell.type);
                 break;
+            case 'wet-dirt-with-seed':
+                wetDirtWithSeedAutomata(cell.x, cell.y, cell.type);
             case 'dirt':
             case 'wet-dirt':
             case 'dirt-with-seed':
-            case 'wet-dirt-with-seed':
                 dirtAutomata(cell.x, cell.y, cell.type);
                 break;
             case 'water':
@@ -462,6 +472,15 @@ function runCellularAutomata() {
             case 'seed':
                 seedAutomata(cell.x, cell.y, cell.type);
                 break;
+            case 'trunk':
+                trunkAutomata(cell.x, cell.y, cell.type);
+                break;
+            case 'seaweed':
+                seaweedAutomata(cell.x, cell.y, cell.type);
+                break;
+            case 'fish':
+                fishAutomata(cell.x, cell.y, cell.type);
+                break;
         }
     }
 
@@ -504,13 +523,17 @@ export function updateSandCount(amt=1) {
         sandThisSecond += multAmt;
     }
     GAME_STATE.sandCount += multAmt;
+
+    checkButtonsDisabled();
+}
+
+function updateSandPerSecond() {
     let now = Date.now();
     if (now - lastSandCountUpdateTime >= 1000) {
         sandLastSecond = sandThisSecond;
         sandThisSecond = 0;
         lastSandCountUpdateTime = now;
     }
-    checkButtonsDisabled();
 }
 
 export function clearCanvas() {
@@ -547,6 +570,34 @@ export function increaseGridSize() {
     drawCanvas(true);
 }
 
+export function setGridSize(width: number, height: number) {
+    GAME_STATE.width = width;
+    GAME_STATE.height = height;
+    let grid = GAME_STATE.grid;
+    let nextGrid = GAME_STATE.nextGrid;
+
+    if (grid.length > height) {
+        grid.length = height;
+        nextGrid.length = height;
+    }
+
+    for (let y = 0; y < GAME_STATE.height; y++) {
+        if (grid.length < height) {
+            grid.push(Array.from({ length: GAME_STATE.width }, () => 'empty'));
+            nextGrid.push(Array.from({ length: GAME_STATE.width }, () => 'empty'));
+        }
+        for (let x = 0; x < GAME_STATE.width; x++) {
+            if (grid[y].length < width) {
+                grid[y].push('empty');
+                nextGrid[y].push('empty');
+            }
+        }
+    }
+
+    CANVAS.getContext('2d').clearRect(0, 0, CANVAS.width, CANVAS.height);
+    drawCanvas(true);
+}
+
 export function spendSand(interaction: Interaction) {
     switch (interaction) {
         case 'spend-hold-to-sand':
@@ -573,4 +624,21 @@ function loadGame() {
         checkButtonsDisabled();
         console.log('Game loaded.');
     }
+}
+
+
+function getGenericCellType(cellType: Cell): string {
+    if (cellType.startsWith('wet-dirt-with-seed-')) {
+        return 'wet-dirt-with-seed';
+    }
+    if (cellType.startsWith('trunk-')) {
+        return 'trunk';
+    }
+    if (cellType.startsWith('seaweed-')) {
+        return 'seaweed';
+    }
+    if (cellType.startsWith('fish-')) {
+        return 'fish';
+    }
+    return cellType;
 }
