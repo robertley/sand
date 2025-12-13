@@ -1,0 +1,145 @@
+html {
+    margin: 0;
+    padding: 0;
+    background-color: #0e0808;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+$gamePadding: 2em;
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: calc(100vh - #{$gamePadding} * 2);
+    width: calc(100vw - #{$gamePadding} * 2);
+    padding: $gamePadding;
+    display: flex;
+    color: #c2b280;
+    gap: 2em;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.left-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 1000px;
+    
+    .debug {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+}
+
+.right-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    h1 {
+        margin-top: 0;
+        font-size: 4em;
+        margin-bottom: 2rem;
+    }
+    .top-container {
+        flex: 1;
+    }
+    .bottom-container {
+        text-align: right;
+    }
+}
+
+.middle-wrapper {
+    
+}
+
+.button-container-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    margin-bottom: 1em;
+}
+
+.canvas-wrapper {
+    canvas {
+        display: block;
+        margin: 0;
+        padding: 0;
+        border: 1px solid #333;
+
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        -webkit-user-drag: none !important;
+        -khtml-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+    }
+
+    margin-bottom: 2em;
+}
+
+.button-container {
+    display: flex;
+    gap: 1em;
+    margin-bottom: 1em;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 1em 2em;
+    font-size: 1.2em;
+    background-color: #333;
+    color: #c2b280;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+
+    &:hover {
+        background-color: #555;
+    }
+}
+
+button:disabled {
+    background-color: #111;
+    color: #555;
+    cursor: initial;
+}
+
+.stat-table {
+    font-size: 1.5em;
+    td {
+        padding: 0.5em 2em 0.5em 0;
+    }
+}
+
+.form-container {
+    table {
+        td {
+            padding: 0.5em 1em;
+        }
+    }
+}
+
+canvas.draw-sand {
+    cursor: url('./assets/sand.png'), auto;
+}
+
+canvas.draw-water {
+    cursor: url('./assets/water.png'), auto;
+}
+
+canvas.draw-hole {
+    cursor: url('./assets/hole.png'), auto;
+}
+
+canvas.draw-sand-portal {
+    cursor: url('./assets/sand-portal.png'), auto;
+}
+
+canvas.draw-stone {
+    cursor: url('./assets/stone.png'), auto;
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sand</title>
+   </head>
+   <body>
+      <div class="left-wrapper">
+         <div class="canvas-wrapper">
+            <canvas width="1000px" height="750px"></canvas>
+         </div>
+
+         <div class="button-container">
+            <button id="eraserButton">Eraser</button>
+            <button id="sandButton">Sand</button>
+            <button id="dirtButton">Dirt</button>
+            <button id="waterButton">Water</button>
+            <button id="fireButton">Fire</button>
+            <button id="stoneButton">Stone</button>
+            <button id="holeButton">Hole</button>
+            <button id="sandPortalButton">Sand Portal</button>
+            <button id="waterPortalButton">Water Portal</button>
+            <button id="torchButton">Torch</button>
+            <button id="steamEngineButton">Steam Engine</button>
+            <button id="wireButton">Wire</button>
+            <button id="seedButton">Seed</button>
+         </div>
+
+         <div class="debug">
+            <div class="button-container">
+               <button id="clearButton">Clear</button>
+               <button id="debug">Debug</button>
+               <button id="newGameButton">New Game</button>
+            </div>
+         </div>
+      </div>
+
+      <!-- <div class="middle-wrapper">
+         <div class="button-container-vertical">
+            <button id="sandButton">Sand</button>
+            <button id="waterButton">Water</button>
+            <button id="holeButton">Hole</button>
+            <button id="sandPortalButton">Sand Portal</button>
+         </div>
+      </div> -->
+
+      <div class="right-wrapper">
+         <div class="top-container">
+            <h1 id="sandHeader">Sand: 0</h1>
+            <table class="stat-table">
+               <tr>
+                  <td>Mouse Sand Drop Rate:</td>
+                  <td id="mspsDisplay">0</td>
+               </tr>
+               <tr>
+                  <td>Sand Multiplier:</td>
+                  <td id="sandMultiplierDisplay">1</td>
+               </tr>
+               <tr>
+                  <td>Sand Per Second:</td>
+                  <td id="spsDisplay">0</td>
+               </tr>
+            </table>
+            <h2>Upgrades</h2>
+            <div class="button-container">
+               <button id="holdToSandButton" disabled>Hold to Sand (10)</button>
+               <button id="upgradeSPS">Upgrade Drop Rate (100)</button>
+               <button id="upgradeGridSize">Upgrade Sandbox Size (200)</button>
+               <button id="upgradeSandMultiplierButton">Upgrade Sand Multiplier (300)</button>
+            </div>
+
+            <div class="form-container">
+               <table>
+                  <tr>
+                     <td><label for="spsInput">SPS:</label></td>
+                     <td><input type="text" id="spsInput"></td>
+                  </tr>
+                  <tr>
+                     <td><label for="portalSpawnRateInput">Portal Spawn Rate:</label></td>
+                     <td><input type="text" id="portalSpawnRateInput"></td>
+                  </tr>
+               </table>
+            </div>
+         </div>
+         <div class="bottom-container">
+            <h2>FPS: <span id="fpsCounter">0</span></h2>
+         </div>
+
+      </div>
+   </body>
+</html>
