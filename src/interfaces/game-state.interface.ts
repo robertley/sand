@@ -1,8 +1,9 @@
 import { Cell } from "./cell.type";
+import { Cell as CellAbstract } from "../classes/cell.class";
 
 export interface GameState {
-    grid: Cell[][];
-    nextGrid: Cell[][];
+    grid: CellAbstract[][];
+    nextGrid: CellAbstract[][];
     width: number;
     height: number;
     sandCount: number;
