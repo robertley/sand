@@ -4,11 +4,12 @@ export class Empty extends Cell {
     
     cellType = CellType.EMPTY;
     empty = true;
+    fallable = true;
 
     constructor(x: number, y: number) {
         super(x, y);
     }
 
-    automata(x: number, y: number): void {
+    automata(): void {
     }
 }

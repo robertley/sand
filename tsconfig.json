@@ -9,7 +9,8 @@
     "allowJs": true,
     "moduleResolution": "node10",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": false
   },
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"],
   "include": ["./src/**/*", "index.d.ts"]

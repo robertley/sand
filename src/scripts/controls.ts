@@ -1,16 +1,18 @@
-import { ADD_CELL_MAP, CANVAS, GAME_STATE, getCellAtPos, TARGET_FPS, updateSandCount } from "..";
-import { Cell } from "../interfaces/cell.type";
+import { ADD_CELL_MAP, CANVAS, GAME, getCellAtPos, TARGET_FPS, updateSandCount } from "..";
+import { CellType } from "../classes";
+import { getAbstractCell } from "./helper";
 
-const NON_BLOOM_CELL_TYPES = ['stone', 'hole', 'sand-portal-0', 'water-portal', 'torch', 'empty', 'steam-engine-0', 'wire'];
-const MAX_DROP_RATE_TYPES = ['seed', 'fish'];
+const NON_BLOOM_CELL_TYPES_OLD = ['stone', 'hole', 'sand-portal-0', 'water-portal', 'torch', 'empty', 'steam-engine-0', 'wire'];
+const NON_BLOOM_CELL_TYPES = new Set<CellType>([CellType.STONE, CellType.HOLE, CellType.SAND_PORTAL, CellType.WATER_PORTAL, CellType.TORCH, CellType.EMPTY, CellType.STEAM_ENGINE, CellType.WIRE]);
+const MAX_DROP_RATE_TYPES = new Set<CellType>([CellType.SEED, CellType.FISH]);
 const MAX_DROP_RATE = 5;
 
 function getMousePosCell(e: MouseEvent) {
     const rect = CANVAS.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const squareSizeWidth = Math.floor(CANVAS.width / GAME_STATE.width);
-    const squareSizeHeight = Math.floor(CANVAS.height / GAME_STATE.height);
+    const squareSizeWidth = Math.floor(CANVAS.width / GAME.width);
+    const squareSizeHeight = Math.floor(CANVAS.height / GAME.height);
     const gridX = Math.floor(x / squareSizeWidth);
     const gridY = Math.floor(y / squareSizeHeight);
     return { x: gridX, y: gridY };
@@ -18,38 +20,38 @@ function getMousePosCell(e: MouseEvent) {
 
 export function clickHandler() {
     CANVAS.onclick = function (e) {
-        if (GAME_STATE.holdToSandUnlocked) {
+        if (GAME.holdToSandUnlocked) {
             return;
         }
         addCellAtMouse(getMousePosCell(e));
-        if (GAME_STATE.drawCell === 'sand') {
+        if (GAME.drawCell === CellType.SAND) {
             updateSandCount();
         }
     };
 
     // on mouse hold, continually add sand on the mouse position
     CANVAS.onmousedown = function (e) {
-        GAME_STATE.mouseDown = true;
+        GAME.mouseDown = true;
     }
 
     CANVAS.onmouseup = function (e) {
-        GAME_STATE.mouseDown = false;
+        GAME.mouseDown = false;
     }
 
     CANVAS.onmousemove = function (e) {
-        GAME_STATE.mouseMove = true;
+        GAME.mouseMove = true;
         let { x, y } = getMousePosCell(e);
-        GAME_STATE.mousePosX = x;
-        GAME_STATE.mousePosY = y;
+        GAME.mousePosX = x;
+        GAME.mousePosY = y;
     }
 
     CANVAS.onmouseleave = function (e) {
-        GAME_STATE.mouseDown = false;
-        GAME_STATE.mouseEntered = false;
+        GAME.mouseDown = false;
+        GAME.mouseEntered = false;
     }
 
     CANVAS.onmouseenter = function (e) {
-        GAME_STATE.mouseEntered = true;
+        GAME.mouseEntered = true;
     }
 }
 
@@ -57,30 +59,30 @@ export function holdSpawnUpdate() {
 
     let now = Date.now();
 
-    let sandPerSecond = GAME_STATE.mouseDropRate;
-    if (MAX_DROP_RATE_TYPES.includes(GAME_STATE.drawCell)) {
+    let sandPerSecond = GAME.mouseDropRate;
+    if (MAX_DROP_RATE_TYPES.has(GAME.drawCell)) {
         sandPerSecond = MAX_DROP_RATE;
     }
     
     if (
-        GAME_STATE.mouseDown &&
-        GAME_STATE.mouseEntered &&
+        GAME.mouseDown &&
+        GAME.mouseEntered &&
         (
             (
-                GAME_STATE.lastSandAddTime + (1000 / sandPerSecond) < now &&
-                GAME_STATE.holdToSandUnlocked
+                GAME.lastSandAddTime + (1000 / sandPerSecond) < now &&
+                GAME.holdToSandUnlocked
             ) ||
-            NON_BLOOM_CELL_TYPES.includes(GAME_STATE.drawCell)
+            NON_BLOOM_CELL_TYPES.has(GAME.drawCell)
         )
     ) {
         let sandSpawnAmt = sandPerSecond / TARGET_FPS;
         for (let i = 0; i < sandSpawnAmt; i++) {
-            addCellAtMouse({x: GAME_STATE.mousePosX, y: GAME_STATE.mousePosY});
-            if (GAME_STATE.drawCell === 'sand') {
+            addCellAtMouse({x: GAME.mousePosX, y: GAME.mousePosY});
+            if (GAME.drawCell === CellType.SAND) {
                 updateSandCount();
             }
         }
-        GAME_STATE.lastSandAddTime = now;
+        GAME.lastSandAddTime = now;
     }
 }
 
@@ -96,30 +98,37 @@ function addCellAtMouse({x, y}: {x: number, y: number}) {
     let cellAtBelowLeft = getCellAtPos(x - 1, y + 1);
     let cellAtBelowRight = getCellAtPos(x + 1, y + 1);
 
+    if (cellAtPos === null) {
+        console.error(`Error adding cell at mouse: cellAtPos is null`);
+        return;
+    }
+
+    let cellType = cellAtPos.cellType;
+
     let emptyCells = [];
-    if (cellAtPos !== 'empty' && !NON_BLOOM_CELL_TYPES.includes(GAME_STATE.drawCell)) {
-        if (cellAtRight === 'empty') {
+    if (cellType !== CellType.EMPTY && !NON_BLOOM_CELL_TYPES.has(GAME.drawCell)) {
+        if (cellAtRight?.cellType === CellType.EMPTY) {
             emptyCells.push('right');
         }
-        if (cellAtLeft === 'empty') {
+        if (cellAtLeft?.cellType === CellType.EMPTY) {
             emptyCells.push('left');
         }
-        if (cellAtBelow === 'empty') {
+        if (cellAtBelow?.cellType === CellType.EMPTY) {
             emptyCells.push('below');
         }
-        if (cellAtAbove === 'empty') {
+        if (cellAtAbove?.cellType === CellType.EMPTY) {
             emptyCells.push('above');
         }
-        if (cellAtBelowRight === 'empty') {
+        if (cellAtBelowRight?.cellType === CellType.EMPTY) {
             emptyCells.push('below-right');
         }
-        if (cellAtBelowLeft === 'empty') {
+        if (cellAtBelowLeft?.cellType === CellType.EMPTY) {
             emptyCells.push('below-left');
         }
-        if (cellAtAboveRight === 'empty') {
+        if (cellAtAboveRight?.cellType === CellType.EMPTY) {
             emptyCells.push('above-right');
         }
-        if (cellAtAboveLeft === 'empty') {
+        if (cellAtAboveLeft?.cellType === CellType.EMPTY) {
             emptyCells.push('above-left');
         }
     }
@@ -158,20 +167,20 @@ function addCellAtMouse({x, y}: {x: number, y: number}) {
         }
     }
 
-    if (x < 0 || x >= GAME_STATE.width || y < 0 || y >= GAME_STATE.height) {
+    if (x < 0 || x >= GAME.width || y < 0 || y >= GAME.height) {
         return;
     }
 
-    let finalCell = checkSpecialCell(GAME_STATE.drawCell);
-    ADD_CELL_MAP.set(`${x},${y}`, { x, y, type: finalCell });
+    // let finalCell = checkSpecialCell(GAME.drawCell);
+    ADD_CELL_MAP.set(`${x},${y}`, { x, y, cell: getAbstractCell(GAME.drawCell, x, y) });
 }
 
-function checkSpecialCell(cell: Cell): Cell {
-    let returnCell: Cell = cell;
-    switch (cell) {
-        case 'fish':
-            let fishTypeId = Math.floor(Math.random() * 3);
-            returnCell = `fish-pending-5-${fishTypeId}`;
-    }
-    return returnCell;
-}
+// function checkSpecialCell(cell: CellType): CellType {
+//     let returnCell: CellType = cell;
+//     switch (cell) {
+//         case CellType.FISH:
+//             let fishTypeId = Math.floor(Math.random() * 3);
+//             returnCell = `fish-pending-5-${fishTypeId}` as unknown as CellType;
+//     }
+//     return returnCell;
+// }

@@ -1,4 +1,4 @@
-import { fpsCurrent, GAME_STATE, sandLastSecond } from "..";
+import { fpsCurrent, GAME, sandLastSecond } from "..";
 
 const SAND_DISPLAY = document.getElementById('sandHeader');
 const MOUSE_SAND_PER_SECOND_DISPLAY = document.getElementById('mspsDisplay');
@@ -8,7 +8,7 @@ const FPS_COUNTER = document.getElementById('fpsCounter');
 
 export function updateStatsUI() {
     if (SAND_DISPLAY) {
-        SAND_DISPLAY.textContent = `Sand: ${GAME_STATE.sandCount.toFixed(0)}`;
+        SAND_DISPLAY.textContent = `Sand: ${GAME.sandCount.toFixed(0)}`;
     }
     if (SAND_PER_SECOND_DISPLAY) {
         SAND_PER_SECOND_DISPLAY.textContent = `${sandLastSecond}`;
@@ -17,9 +17,9 @@ export function updateStatsUI() {
         FPS_COUNTER.textContent = `${fpsCurrent.toFixed(0)}`;
     }
     if (MOUSE_SAND_PER_SECOND_DISPLAY) {
-        MOUSE_SAND_PER_SECOND_DISPLAY.textContent = `${GAME_STATE.mouseDropRate}/s`;
+        MOUSE_SAND_PER_SECOND_DISPLAY.textContent = `${GAME.mouseDropRate}/s`;
     }
     if (SAND_MULTIPLIER_DISPLAY) {
-        SAND_MULTIPLIER_DISPLAY.textContent = `x${GAME_STATE.sandMultiplier?.toFixed(1) ?? 1}`;
+        SAND_MULTIPLIER_DISPLAY.textContent = `x${GAME.sandMultiplier?.toFixed(1) ?? 1}`;
     }
 }

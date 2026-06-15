@@ -1,10 +1,9 @@
 import { Cell, CellType } from "./cell.class";
 
-export class Hole extends Cell {
-    
-    cellType = CellType.HOLE;
-    empty = true;
-    fallable = true;
+export class Stone extends Cell {
+
+    cellType = CellType.STONE;
+    fallable = false;
 
     constructor(x: number, y: number) {
         super(x, y);

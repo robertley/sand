@@ -1,9 +1,8 @@
-import { Cell } from "./cell.type";
-import { Cell as CellAbstract } from "../classes/cell.class";
+import { Cell, CellType } from "../classes/cell.class";
 
 export interface GameState {
-    grid: CellAbstract[][];
-    nextGrid: CellAbstract[][];
+    grid: Cell[][];
+    nextGrid: Cell[][];
     width: number;
     height: number;
     sandCount: number;
@@ -18,7 +17,7 @@ export interface GameState {
 
     timesIncreasedGrid: number;
     lastSandAddTime: number;
-    drawCell: Cell;
+    drawCell: CellType;
 
     // upgrades
     holdToSandUnlocked: boolean;
